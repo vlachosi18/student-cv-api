@@ -9,7 +9,7 @@ import java.util.Objects;
  * Links directly to an AppUser using a shared Primary Key.
  */
 @Entity
-@Table(name ="students")
+@Table(name = "students")
 public class Student {
     @Id
     private Integer id;
@@ -28,13 +28,13 @@ public class Student {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String cvText;
 
-    public Student(){
+    public Student() {
 
     }
 
-    public Student(AppUser appUser, String am, String firstName, String lastName, String cvText) {
+    public Student(AppUser appUser, String academicId, String firstName, String lastName, String cvText) {
         this.appUser = appUser;
-        this.academicId = am;
+        this.academicId = academicId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.cvText = cvText;
@@ -60,8 +60,8 @@ public class Student {
         return academicId;
     }
 
-    public void setAcademicId(String am) {
-        this.academicId = am;
+    public void setAcademicId(String academicId) {
+        this.academicId = academicId;
     }
 
     public String getFirstName() {

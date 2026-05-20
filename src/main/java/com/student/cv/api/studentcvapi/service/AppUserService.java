@@ -197,6 +197,7 @@ public class AppUserService {
             appUserRepository.deleteById(id);
             return true;
         }catch (Exception e){
+            System.out.println("Database Error: " + e.getMessage());
             return false;
         }
     }
@@ -224,6 +225,7 @@ public class AppUserService {
             return true;
 
         } catch (Exception e) {
+            System.out.println("Database Error: " + e.getMessage());
             return false;
         }
     }
@@ -251,6 +253,7 @@ public class AppUserService {
             return true;
 
         } catch (Exception e) {
+            System.out.println("Database Error: " + e.getMessage());
             return false;
         }
     }
@@ -273,6 +276,7 @@ public class AppUserService {
             AppUser appUser= user.get();
             return Optional.of(new AppUserDTO(appUser.getId(), appUser.getEmail(), appUser.getRole()));
         }catch (Exception e) {
+            System.out.println("Database Error: " + e.getMessage());
             return Optional.empty();
         }
     }

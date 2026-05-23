@@ -105,10 +105,11 @@ public class StudentService {
         if (id == null || academicId == null || firstName == null || lastName == null || cvText == null) {
             return false;
         }
-        if (studentRepository.existsById(id)) {
-            return false;
-        }
+
         try {
+            if (studentRepository.existsById(id)) {
+                return false;
+            }
             Optional<AppUser> user = appUserRepository.findById(id);
             if (user.isEmpty()) {
                 return false;
@@ -132,10 +133,11 @@ public class StudentService {
         if (id == null) {
             return false;
         }
-        if (!studentRepository.existsById(id)) {
-            return false;
-        }
+
         try {
+            if (!studentRepository.existsById(id)) {
+                return false;
+            }
             studentRepository.deleteById(id);
             appUserRepository.deleteById(id);
             return true;

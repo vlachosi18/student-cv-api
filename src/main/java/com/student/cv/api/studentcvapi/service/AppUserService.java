@@ -39,39 +39,47 @@ public class AppUserService {
      * @return true if login is successful, false if credentials are wrong or profile is missing.
      */
     public boolean logInUser(String email, String password, HttpSession httpSession) {
-        Optional<AppUser> appUser = appUserRepository.findByEmail(email);
-        if (appUser.isEmpty() || !Objects.equals(appUser.get().getPassword(), password)) {
+        if (email == null || password == null || httpSession == null) {
             return false;
         }
-        AppUser user = appUser.get();
-        switch (user.getRole()) {
-            case "STUDENT":
-                Optional<Student> student = studentRepository.findById(user.getId());
-                if (student.isPresent()) {
-                    Student s = student.get();
-                    httpSession.setAttribute("loggedInUser",
-                            new StudentDTO
-                                    (s.getId(),
-                                            user.getEmail(),
-                                            s.getAcademicId(),
-                                            s.getFirstName(), s.getLastName()));
-                    return true;
-                } else return false;
+        try {
+            Optional<AppUser> appUser = appUserRepository.findByEmail(email);
+            if (appUser.isEmpty() || !Objects.equals(appUser.get().getPassword(), password)) {
+                return false;
+            }
+            AppUser user = appUser.get();
+            switch (user.getRole()) {
+                case "STUDENT":
+                    Optional<Student> student = studentRepository.findById(user.getId());
+                    if (student.isPresent()) {
+                        Student s = student.get();
+                        httpSession.setAttribute("loggedInUser",
+                                new StudentDTO
+                                        (s.getId(),
+                                                user.getEmail(),
+                                                s.getAcademicId(),
+                                                s.getFirstName(), s.getLastName()));
+                        return true;
+                    } else return false;
 
-            case "BUSINESS":
-                Optional<Business> business = businessRepository.findById(user.getId());
-                if (business.isPresent()) {
-                    Business b = business.get();
-                    httpSession.setAttribute("loggedInUser", new BusinessDTO(b.getId(),
-                            user.getEmail(), b.getRegistrationNumber(), b.getName(), b.getDescription()));
-                    return true;
-                } else return false;
+                case "BUSINESS":
+                    Optional<Business> business = businessRepository.findById(user.getId());
+                    if (business.isPresent()) {
+                        Business b = business.get();
+                        httpSession.setAttribute("loggedInUser", new BusinessDTO(b.getId(),
+                                user.getEmail(), b.getRegistrationNumber(), b.getName(), b.getDescription()));
+                        return true;
+                    } else return false;
 
-            case "ADMIN":
-                httpSession.setAttribute("loggedInUser", new AppUserDTO(user.getId(), user.getEmail(), "ADMIN"));
-                return true;
+                case "ADMIN":
+                    httpSession.setAttribute("loggedInUser", new AppUserDTO(user.getId(), user.getEmail(), "ADMIN"));
+                    return true;
+            }
+            return false;
+        } catch (Exception e) {
+            System.out.println("Database Error: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
     /**
@@ -80,12 +88,11 @@ public class AppUserService {
      * @param httpSession The current HTTP session of the user.
      * @return true if the session was successfully invalidated, false if the session was already null.
      */
-    public boolean logOutUser(HttpSession httpSession){
-        if(httpSession!=null){
+    public boolean logOutUser(HttpSession httpSession) {
+        if (httpSession != null) {
             httpSession.invalidate();
             return true;
-        }
-        else return false;
+        } else return false;
 
     }
 
@@ -93,26 +100,26 @@ public class AppUserService {
      * Validates if the given ID matches the ID stored in the httpSession
      * of the logged-in user.
      *
-     * @param id The given ID.
+     * @param id          The given ID.
      * @param httpSession The current HTTP session of the user.
      * @return true if the given ID and the session ID match, false otherwise or if the given ID or the session is null
      */
-    public boolean validateId(Integer id, HttpSession httpSession){
-        if(httpSession==null || id==null){
+    public boolean validateId(Integer id, HttpSession httpSession) {
+        if (httpSession == null || id == null) {
             return false;
         }
         Object user = httpSession.getAttribute("loggedInUser");
-        if(user==null){
+        if (user == null) {
             return false;
         }
-        if (user instanceof StudentDTO){
-            return Objects.equals(((StudentDTO) user).getId(),id);
+        if (user instanceof StudentDTO) {
+            return Objects.equals(((StudentDTO) user).getId(), id);
         }
-        if (user instanceof BusinessDTO){
-            return Objects.equals(((BusinessDTO) user).getId(),id);
+        if (user instanceof BusinessDTO) {
+            return Objects.equals(((BusinessDTO) user).getId(), id);
         }
-        if (user instanceof AppUserDTO){
-            return Objects.equals(((AppUserDTO) user).getId(),id);
+        if (user instanceof AppUserDTO) {
+            return Objects.equals(((AppUserDTO) user).getId(), id);
 
         }
         return false;
@@ -124,16 +131,16 @@ public class AppUserService {
      * @param httpSession The current HTTP session of the user.
      * @return true if the logged-in user is an Admin, false otherwise, if the session is null, or if no user is logged in.
      */
-    public boolean checkIfAdmin(HttpSession httpSession){
-        if (httpSession==null){
+    public boolean checkIfAdmin(HttpSession httpSession) {
+        if (httpSession == null) {
             return false;
         }
         Object user = httpSession.getAttribute("loggedInUser");
-        if(user==null){
+        if (user == null) {
             return false;
         }
-        if (user instanceof AppUserDTO){
-            return Objects.equals(((AppUserDTO) user).getRole(),"ADMIN");
+        if (user instanceof AppUserDTO) {
+            return Objects.equals(((AppUserDTO) user).getRole(), "ADMIN");
 
         }
         return false;
@@ -143,14 +150,14 @@ public class AppUserService {
      * Checks if the currently logged-in user is a Business.
      *
      * @param httpSession The current HTTP session of the user.
-     * @return  true if the logged-in user is a Business, false otherwise, if the session is null, or if no user is logged in.
+     * @return true if the logged-in user is a Business, false otherwise, if the session is null, or if no user is logged in.
      */
-    public boolean checkIfBusiness(HttpSession httpSession){
-        if (httpSession==null){
+    public boolean checkIfBusiness(HttpSession httpSession) {
+        if (httpSession == null) {
             return false;
         }
         Object user = httpSession.getAttribute("loggedInUser");
-        if(user==null){
+        if (user == null) {
             return false;
         }
         return user instanceof BusinessDTO;
@@ -159,19 +166,20 @@ public class AppUserService {
     /**
      * Adds a new user to the database.
      *
-     * @param email The user's email.
+     * @param email    The user's email.
      * @param password The user's password.
-     * @param role The user's role
+     * @param role     The user's role
      * @return The ID of the newly created user, or -1 if inputs are null, email exists, or DB fails.
      */
     public Integer addUser(String email, String password, String role) {
         if (email == null || password == null || role == null) {
             return -1;
         }
-        if (appUserRepository.findByEmail(email).isPresent()) {
-            return -1;
-        }
+
         try {
+            if (appUserRepository.findByEmail(email).isPresent()) {
+                return -1;
+            }
             AppUser savedUser = appUserRepository.save(new AppUser(email, password, role));
             return savedUser.getId();
         } catch (Exception e) {
@@ -186,17 +194,18 @@ public class AppUserService {
      * @param id The ID of the user to be deleted.
      * @return true if the deletion is successful, false if the ID is null, the user doesn't exist, or a DB error occurs.
      */
-    public boolean deleteUserById(Integer id){
-        if (id==null){
+    public boolean deleteUserById(Integer id) {
+        if (id == null) {
             return false;
         }
-        if(!appUserRepository.existsById(id)){
-            return false;
-        }
+
         try {
+            if (!appUserRepository.existsById(id)) {
+                return false;
+            }
             appUserRepository.deleteById(id);
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Database Error: " + e.getMessage());
             return false;
         }
@@ -205,7 +214,7 @@ public class AppUserService {
     /**
      * Updates the email address of an existing user.
      *
-     * @param id The ID of the user.
+     * @param id       The ID of the user.
      * @param newEmail The new email address to be set.
      * @return true if the email was successfully updated, false if inputs are null, the user doesn't exist, or a DB error occurs.
      */
@@ -215,13 +224,13 @@ public class AppUserService {
         }
 
         try {
-           Optional<AppUser> user =appUserRepository.findById(id);
-           if(user.isEmpty()){
-               return false;
-           }
-           AppUser appUser= user.get();
-           appUser.setEmail(newEmail);
-           appUserRepository.save(appUser);
+            Optional<AppUser> user = appUserRepository.findById(id);
+            if (user.isEmpty()) {
+                return false;
+            }
+            AppUser appUser = user.get();
+            appUser.setEmail(newEmail);
+            appUserRepository.save(appUser);
             return true;
 
         } catch (Exception e) {
@@ -233,21 +242,21 @@ public class AppUserService {
     /**
      * Updates the password of an existing user.
      *
-     * @param id The ID of the user.
+     * @param id          The ID of the user.
      * @param newPassword The new password to be set.
      * @return true if the password was successfully updated, false if inputs are null, the user doesn't exist, or a DB error occurs.
      */
-    public boolean editUserPassword(Integer id, String newPassword){
+    public boolean editUserPassword(Integer id, String newPassword) {
         if (id == null || newPassword == null) {
             return false;
         }
 
         try {
-            Optional<AppUser> user =appUserRepository.findById(id);
-            if(user.isEmpty()){
+            Optional<AppUser> user = appUserRepository.findById(id);
+            if (user.isEmpty()) {
                 return false;
             }
-            AppUser appUser= user.get();
+            AppUser appUser = user.get();
             appUser.setPassword(newPassword);
             appUserRepository.save(appUser);
             return true;
@@ -264,18 +273,18 @@ public class AppUserService {
      * @param id The ID of the user to retrieve.
      * @return An Optional containing the AppUserDTO if found, or an empty Optional if the ID is null, the user is not found, or a DB error occurs.
      */
-    public Optional<AppUserDTO> getUserById(Integer id){
-        if (id==null){
+    public Optional<AppUserDTO> getUserById(Integer id) {
+        if (id == null) {
             return Optional.empty();
         }
         try {
-            Optional<AppUser> user =appUserRepository.findById(id);
-            if(user.isEmpty()){
+            Optional<AppUser> user = appUserRepository.findById(id);
+            if (user.isEmpty()) {
                 return Optional.empty();
             }
-            AppUser appUser= user.get();
+            AppUser appUser = user.get();
             return Optional.of(new AppUserDTO(appUser.getId(), appUser.getEmail(), appUser.getRole()));
-        }catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Database Error: " + e.getMessage());
             return Optional.empty();
         }

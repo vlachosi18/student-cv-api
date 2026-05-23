@@ -89,10 +89,11 @@ public class BusinessService {
         if (id == null || registrationNumber == null || name == null || description == null) {
             return false;
         }
-        if (businessRepository.existsById(id)) {
-            return false;
-        }
+
         try {
+            if (businessRepository.existsById(id)) {
+                return false;
+            }
             Optional<AppUser> user = appUserRepository.findById(id);
             if (user.isEmpty()) {
                 return false;
@@ -116,10 +117,11 @@ public class BusinessService {
         if (id == null) {
             return false;
         }
-        if (!businessRepository.existsById(id)) {
-            return false;
-        }
+
         try {
+            if (!businessRepository.existsById(id)) {
+                return false;
+            }
             businessRepository.deleteById(id);
             appUserRepository.deleteById(id);
             return true;

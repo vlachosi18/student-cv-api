@@ -5,7 +5,6 @@ import com.student.cv.api.studentcvapi.request.UpdateEmailRequest;
 import com.student.cv.api.studentcvapi.request.UpdatePasswordRequest;
 import com.student.cv.api.studentcvapi.service.AppUserService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +17,10 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/users")
-public class AppUserController {
-    private final AppUserService appUserService;
+public class AppUserController extends BaseController {
 
     public AppUserController(AppUserService appUserService) {
-        this.appUserService = appUserService;
+        super(appUserService);
     }
 
 
@@ -50,6 +48,7 @@ public class AppUserController {
 
     /**
      * Updates the email address of a specific user.
+     * Logs out the user if successful.
      * Only accessible by an Admin or the owner of the requested profile.
      *
      * @param id                 The ID of the user whose email is being updated.
@@ -71,12 +70,15 @@ public class AppUserController {
         if (!appUserService.editUserEmail(id, updateEmailRequest.newEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Email cannot be updated."));
         }
-        return ResponseEntity.ok(Map.of("message", "Email updated successfully"));
+
+        request.getSession().invalidate();
+        return ResponseEntity.ok(Map.of("message", "Email updated successfully. User logged out."));
     }
 
 
     /**
      * Updates the password of a specific user.
+     * Logs out the user if successful.
      * Only accessible by an Admin or the owner of the requested profile.
      *
      * @param id                    The ID of the user whose password is being updated.
@@ -98,25 +100,10 @@ public class AppUserController {
         if (!appUserService.editUserPassword(id, updatePasswordRequest.newPassword())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Password cannot be updated."));
         }
-        return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+        request.getSession().invalidate();
+        return ResponseEntity.ok(Map.of("message", "Password updated successfully. User logged out."));
+
     }
 
 
-    /**
-     * Helper method to verify session existence and user permissions.
-     *
-     * @param id      The ID of the profile being accessed or modified
-     * @param request The HTTP request used to check the session.
-     * @return A ResponseEntity with an error status (401 or 403) if checks fail, or null if the user is authorized.
-     */
-    private ResponseEntity<?> checkSecurity(Integer id, HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("loggedInUser") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "No active session found."));
-        }
-        if (!appUserService.checkIfAdmin(session) && !appUserService.validateId(id, session)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "No permission given."));
-        }
-        return null;
-    }
 }

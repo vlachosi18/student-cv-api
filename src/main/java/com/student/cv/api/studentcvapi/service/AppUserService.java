@@ -10,6 +10,7 @@ import com.student.cv.api.studentcvapi.repository.AppUserRepository;
 import com.student.cv.api.studentcvapi.repository.BusinessRepository;
 import com.student.cv.api.studentcvapi.repository.StudentRepository;
 import jakarta.servlet.http.HttpSession;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -44,7 +45,7 @@ public class AppUserService {
         }
         try {
             Optional<AppUser> appUser = appUserRepository.findByEmail(email);
-            if (appUser.isEmpty() || !Objects.equals(appUser.get().getPassword(), password)) {
+            if (appUser.isEmpty() || !BCrypt.checkpw(password, appUser.get().getPassword())) {
                 return false;
             }
             AppUser user = appUser.get();
@@ -180,7 +181,7 @@ public class AppUserService {
             if (appUserRepository.findByEmail(email).isPresent()) {
                 return -1;
             }
-            AppUser savedUser = appUserRepository.save(new AppUser(email, password, role));
+            AppUser savedUser = appUserRepository.save(new AppUser(email, BCrypt.hashpw(password, BCrypt.gensalt()), role));
             return savedUser.getId();
         } catch (Exception e) {
             System.out.println("Database Error: " + e.getMessage());
@@ -257,7 +258,7 @@ public class AppUserService {
                 return false;
             }
             AppUser appUser = user.get();
-            appUser.setPassword(newPassword);
+            appUser.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
             appUserRepository.save(appUser);
             return true;
 

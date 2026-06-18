@@ -23,4 +23,5 @@ public interface KeywordRepository extends JpaRepository<Keyword,Integer> {
     List<Student> findStudentsByKeywordText(@Param("text") String text);
 
     boolean existsByStudentIdAndText (Integer studentId, String text);
+    void deleteAllByStudentId(Integer studentId);
 }

@@ -5,7 +5,9 @@ import com.student.cv.api.studentcvapi.dto.StudentDTO;
 import com.student.cv.api.studentcvapi.entity.AppUser;
 import com.student.cv.api.studentcvapi.entity.Student;
 import com.student.cv.api.studentcvapi.repository.AppUserRepository;
+import com.student.cv.api.studentcvapi.repository.KeywordRepository;
 import com.student.cv.api.studentcvapi.repository.StudentRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,10 +21,12 @@ import java.util.Optional;
 public class StudentService {
     private final AppUserRepository appUserRepository;
     private final StudentRepository studentRepository;
+    private final KeywordRepository keywordRepository;
 
-    public StudentService(AppUserRepository appUserRepository, StudentRepository studentRepository) {
+    public StudentService(AppUserRepository appUserRepository, StudentRepository studentRepository, KeywordRepository keywordRepository) {
         this.appUserRepository = appUserRepository;
         this.studentRepository = studentRepository;
+        this.keywordRepository = keywordRepository;
     }
 
     /**
@@ -124,11 +128,12 @@ public class StudentService {
     }
 
     /**
-     * Deletes a student and their associated user account from the database.
+     * Deletes a student, their associated user account and their keywords from the database if any exist.
      *
      * @param id The ID of the student (and AppUser) to be deleted.
      * @return true if the deletion is successful, false if the ID is null, the student doesn't exist, or a DB error occurs.
      */
+    @Transactional
     public boolean deleteStudentById(Integer id) {
         if (id == null) {
             return false;
@@ -138,8 +143,10 @@ public class StudentService {
             if (!studentRepository.existsById(id)) {
                 return false;
             }
+            keywordRepository.deleteAllByStudentId(id);
             studentRepository.deleteById(id);
             appUserRepository.deleteById(id);
+
             return true;
         } catch (Exception e) {
             System.out.println("Database Error: " + e.getMessage());

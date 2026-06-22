@@ -123,7 +123,8 @@ public class StudentController extends BaseController {
     }
 
     /**
-     * Deletes a student profile by their ID.
+     * Deletes a student profile by their ID and
+     * Logs out the user only if they are the owner of the requested profile.
      * Only accessible by an Admin or the profile owner.
      *
      * @param id      The ID of the student to be deleted.
@@ -137,7 +138,11 @@ public class StudentController extends BaseController {
         if (!studentService.deleteStudentById(id)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Could not delete student profile. Student ID might not exist."));
         }
-        return ResponseEntity.ok(Map.of("message", "Student deleted successfully."));
+        if(appUserService.checkIfAdmin(request.getSession())){
+            return ResponseEntity.ok(Map.of("message", "Student deleted successfully."));
+        }
+        request.getSession().invalidate();
+        return ResponseEntity.ok(Map.of("message", "Student deleted successfully. User logged out."));
     }
 
 

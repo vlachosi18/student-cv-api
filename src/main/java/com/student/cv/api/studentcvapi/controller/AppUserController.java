@@ -70,6 +70,9 @@ public class AppUserController extends BaseController {
         if (!appUserService.editUserEmail(id, updateEmailRequest.newEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Email cannot be updated."));
         }
+        if(appUserService.checkIfAdmin(request.getSession())){
+            return ResponseEntity.ok(Map.of("message", "Email updated successfully."));
+        }
 
         request.getSession().invalidate();
         return ResponseEntity.ok(Map.of("message", "Email updated successfully. User logged out."));
@@ -78,7 +81,7 @@ public class AppUserController extends BaseController {
 
     /**
      * Updates the password of a specific user.
-     * Logs out the user if successful.
+     * Logs out the user only if they are the owner of the requested profile.
      * Only accessible by an Admin or the owner of the requested profile.
      *
      * @param id                    The ID of the user whose password is being updated.
@@ -99,6 +102,9 @@ public class AppUserController extends BaseController {
 
         if (!appUserService.editUserPassword(id, updatePasswordRequest.newPassword())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Password cannot be updated."));
+        }
+        if(appUserService.checkIfAdmin(request.getSession())){
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully."));
         }
         request.getSession().invalidate();
         return ResponseEntity.ok(Map.of("message", "Password updated successfully. User logged out."));

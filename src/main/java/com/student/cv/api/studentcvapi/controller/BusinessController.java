@@ -100,6 +100,7 @@ public class BusinessController extends BaseController {
 
     /**
      * Deletes a business profile by their ID.
+     * Logs out the user only if they are the owner of the requested profile.
      * Only accessible by an Admin or the profile owner.
      *
      * @param id      The ID of the business to be deleted.
@@ -113,7 +114,12 @@ public class BusinessController extends BaseController {
         if (!businessService.deleteBusinessById(id)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Could not delete business profile. Business ID might not exist."));
         }
-        return ResponseEntity.ok(Map.of("message", "Business deleted successfully."));
+
+        if(appUserService.checkIfAdmin(request.getSession())) {
+            return ResponseEntity.ok(Map.of("message", "Business deleted successfully."));
+        }
+        request.getSession().invalidate();
+        return ResponseEntity.ok(Map.of("message", "Business deleted successfully. User logged out."));
     }
 
 
